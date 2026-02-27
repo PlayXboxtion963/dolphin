@@ -41,45 +41,45 @@ jobs:
         name: debug-apk
         path: Source/Android/app/build/outputs/apk/debug/*.apk
 
-release:
-    name: Create GitHub Release
-    needs: build
-    runs-on: ubuntu-latest
-    # 只要是推送标签，或者是手动触发，就执行发布
-    if: startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch'
-    
-    permissions:
-      contents: write # 赋予写入 Release 的权限
-
-    steps:
-      - name: Download artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: dolphin-debug-apk
-
-      - name: Determine Release Tag
-        id: get_tag
-        run: |
-          # 如果是标签触发使用标签名，否则使用 manual-build
-          if [[ $GITHUB_REF == refs/tags/* ]]; then
-            echo "tag=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
-          else
-            echo "tag=manual-build" >> $GITHUB_OUTPUT
-          fi
-
-      - name: Create Release
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: ${{ steps.get_tag.outputs.tag }}
-          name: Dolphin Debug ${{ steps.get_tag.outputs.tag }}
-          draft: false
-          prerelease: false
-          files: "**/*.apk"
-          body: |
-            ### 自动构建详情
-            - **构建类型:** Debug APK (直接安装)
-            - **提交哈希:** ${{ github.sha }}
-            - **触发事件:** ${{ github.event_name }}
-          token: ${{ secrets.GITHUB_TOKEN }}
-          body: "Auto-generated Debug APK"
-          token: ${{ secrets.GITHUB_TOKEN }}
+  release:
+      name: Create GitHub Release
+      needs: build
+      runs-on: ubuntu-latest
+      # 只要是推送标签，或者是手动触发，就执行发布
+      if: startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch'
+      
+      permissions:
+        contents: write # 赋予写入 Release 的权限
+  
+      steps:
+        - name: Download artifact
+          uses: actions/download-artifact@v4
+          with:
+            name: dolphin-debug-apk
+  
+        - name: Determine Release Tag
+          id: get_tag
+          run: |
+            # 如果是标签触发使用标签名，否则使用 manual-build
+            if [[ $GITHUB_REF == refs/tags/* ]]; then
+              echo "tag=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+            else
+              echo "tag=manual-build" >> $GITHUB_OUTPUT
+            fi
+  
+        - name: Create Release
+          uses: softprops/action-gh-release@v2
+          with:
+            tag_name: ${{ steps.get_tag.outputs.tag }}
+            name: Dolphin Debug ${{ steps.get_tag.outputs.tag }}
+            draft: false
+            prerelease: false
+            files: "**/*.apk"
+            body: |
+              ### 自动构建详情
+              - **构建类型:** Debug APK (直接安装)
+              - **提交哈希:** ${{ github.sha }}
+              - **触发事件:** ${{ github.event_name }}
+            token: ${{ secrets.GITHUB_TOKEN }}
+            body: "Auto-generated Debug APK"
+            token: ${{ secrets.GITHUB_TOKEN }}
