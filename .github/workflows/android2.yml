@@ -15,7 +15,9 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
-
+      with:
+        submodules: recursive # 关键点：递归拉取所有外部依赖
+        fetch-depth: 0        # 建议设为 0，拉取所有历史记录，避免某些脚本报错
     - name: Set up JDK 17
       uses: actions/setup-java@v4
       with:
