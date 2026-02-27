@@ -14,10 +14,12 @@ jobs:
         working-directory: Source/Android
 
     steps:
-    - uses: actions/checkout@v4
+    - name: Checkout Code
+      uses: actions/checkout@v4
       with:
-        submodules: recursive # 关键点：递归拉取所有外部依赖
-        fetch-depth: 0        # 建议设为 0，拉取所有历史记录，避免某些脚本报错
+        submodules: recursive
+        fetch-depth: 0
+
     - name: Set up JDK 17
       uses: actions/setup-java@v4
       with:
@@ -28,29 +30,32 @@ jobs:
     - name: Grant execute permission
       run: chmod +x gradlew
 
-    - name: Build Release APK
-      run: ./gradlew assembleRelease
+    # 修改点 1：构建任务改为 Debug
+    - name: Build Debug APK
+      run: ./gradlew assembleDebug
 
-    # 1. 导出构建产物
+    # 修改点 2：上传路径改为 debug 目录
     - name: Upload APK as artifact
       uses: actions/upload-artifact@v4
       with:
-        name: release-apk
-        path: Source/Android/app/build/outputs/apk/release/app-release.apk
+        name: debug-apk
+        path: Source/Android/app/build/outputs/apk/debug/*.apk
 
-  # 2. 发布任务
   release:
     needs: build
     runs-on: ubuntu-latest
-    if: startsWith(github.ref, 'refs/tags/v') # 仅当存在标签时运行
+    if: startsWith(github.ref, 'refs/tags/v')
     steps:
       - name: Download artifact
         uses: actions/download-artifact@v4
         with:
-          name: release-apk
+          name: debug-apk
 
       - name: Release to GitHub
         uses: softprops/action-gh-release@v2
         with:
-          files: app-release.apk
-          token: ${{ secrets.GITHUB_TOKEN }} # GitHub 自动提供
+          files: "**/*.apk"
+          tag_name: ${{ github.ref_name }}
+          name: Release ${{ github.ref_name }}
+          body: "Auto-generated Debug APK"
+          token: ${{ secrets.GITHUB_TOKEN }}
